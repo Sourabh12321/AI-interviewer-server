@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors")
 const multer = require('multer');
-const nodemailer = require("nodemailer");
 const pdfParse = require('pdf-parse');
 const axios = require("axios");
 const { router } = require("./router/User");
