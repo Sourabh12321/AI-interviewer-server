@@ -3,15 +3,18 @@ const cors = require("cors")
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const axios = require("axios");
-const { router } = require("./router/User");
+const { userRouter } = require("./router/User");
+const { scoreRouter } = require('./router/Score');
+const { connection } = require("./config/db");
 
 require("dotenv").config()
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json())
-app.use('/user',router);
+app.use('/user',userRouter);
+app.use("/score",scoreRouter);
 
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -92,26 +95,6 @@ app.post("/send-otp", async (req, res) => {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: 'OTP sent successfully!' });
 });
-
-app.post("/verify-otp", (req, res) => {
-    const { email, otp } = req.body;
-    const record = otpStore[email];
-
-    if (!record) return res.status(400).json({ error: "OTP not requested" });
-
-    if (Date.now() > record.expiresAt) {
-        delete otpStore[email];
-        return res.status(400).json({ error: "OTP expired" });
-    }
-
-    if (otp !== record.otp) {
-        return res.status(400).json({ error: "Invalid OTP" });
-    }
-
-    delete otpStore[email]; // clear after successful login
-    res.json({ message: "OTP verified successfully" });
-});
-
 
 app.get("/", (req, res) => {
     try {
@@ -196,6 +179,13 @@ app.post('/clear-session', (req, res) => {
     res.json({ msg: "Session cleared" });
 });
 
-app.listen(8000, () => {
-    console.log("server is running on 8000")
+app.listen(8000, async () => {
+    try {
+        await connection
+        console.log("server is running on 8000")
+        
+    } catch (error) {
+        
+    }
+    
 })

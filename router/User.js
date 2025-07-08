@@ -4,16 +4,16 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { User } = require("../models/UserModel");
 
-const router = express.Router();
+const userRouter = express.Router();
 
 
-router.get("/", (req, res) => {
+userRouter.get("/", (req, res) => {
     res.send("user")
 })
 
 const otpStore = {}; // { email: { otp, expiresAt } }
 
-router.post("/send-otp", async (req, res) => {
+userRouter.post("/send-otp", async (req, res) => {
     const { name, email } = req.body;
     if (!email) return res.status(400).json({ error: "Email required" });
 
@@ -89,9 +89,23 @@ router.post("/send-otp", async (req, res) => {
 });
 
 // SIGNUP API
-router.post('/signup', async (req, res) => {
+userRouter.post('/signup', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, otp } = req.body;
+        const otpRecord = otpStore[email];
+
+        if (!otpRecord) {
+            return res.status(400).json({ message: "OTP not requested" });
+        }
+
+        if (Date.now() > otpRecord.expiresAt) {
+            delete otpStore[email];
+            return res.status(400).json({ message: "OTP has expired" });
+        }
+
+        if (otp !== otpRecord.otp) {
+            return res.status(400).json({ message: "Invalid OTP" });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -116,24 +130,9 @@ router.post('/signup', async (req, res) => {
 });
 
 // LOGIN API (OTP-Based Login with Password Verification)
-router.post('/login', async (req, res) => {
+userRouter.post('/login', async (req, res) => {
     try {
-        const { email, password, otp } = req.body;
-
-        const otpRecord = otpStore[email];
-
-        if (!otpRecord) {
-            return res.status(400).json({ message: "OTP not requested" });
-        }
-
-        if (Date.now() > otpRecord.expiresAt) {
-            delete otpStore[email];
-            return res.status(400).json({ message: "OTP has expired" });
-        }
-
-        if (otp !== otpRecord.otp) {
-            return res.status(400).json({ message: "Invalid OTP" });
-        }
+        const { email, password } = req.body;
 
         const user = await User.findOne({ email });
         if (!user) {
@@ -169,4 +168,4 @@ router.post('/login', async (req, res) => {
     }
 });
 
-module.exports = { router }
+module.exports = { userRouter }
