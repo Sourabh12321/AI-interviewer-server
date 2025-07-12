@@ -13,8 +13,8 @@ const app = express();
 
 app.use(cors({ origin: '*' }));
 app.use(express.json())
-app.use('/user',userRouter);
-app.use("/score",scoreRouter);
+app.use('/user', userRouter);
+app.use("/score", scoreRouter);
 
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -89,8 +89,8 @@ app.post("/send-otp", async (req, res) => {
             </div>
           </div>
         `
-      };
-      
+    };
+
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: 'OTP sent successfully!' });
@@ -104,26 +104,28 @@ app.get("/", (req, res) => {
     }
 })
 
+// app.post('/upload-resume', upload.single('file'), async (req, res) => {
+//     try {
+//         const resumeBuffer = req.file.buffer;
+//         const parsed = await pdfParse(resumeBuffer);
+//         res.json({ text: parsed.text });
+//     } catch (err) {
+//         res.status(500).json({ error: 'Resume parsing failed' });
+//     }
+// });
+
+
 app.post('/upload-resume', upload.single('file'), async (req, res) => {
-    try {
-        const resumeBuffer = req.file.buffer;
-        const parsed = await pdfParse(resumeBuffer);
-        res.json({ text: parsed.text });
-    } catch (err) {
-        res.status(500).json({ error: 'Resume parsing failed' });
-    }
-});
-
-
-app.post('/ask-question', async (req, res) => {
-    const { resumeText, userAnswer } = req.body;
+    // const { resumeText, userAnswer } = req.body;
+    const resumeBuffer = req.file.buffer;
+    const parsed = await pdfParse(resumeBuffer);
 
     const prompt = `
         You are a mock interviewer for a resume-based AI assessment tool.
         
         Candidate's Resume:
         ---
-        ${resumeText}
+        ${parsed.text}
         ---
         
         Your task:
@@ -137,7 +139,7 @@ app.post('/ask-question', async (req, res) => {
         - Do NOT include any answer, explanation, or score.
         - Make sure all questions are diverse and relevant to the candidate's resume.
         
-        Respond ONLY in this exact JSON array format:
+        Respond ONLY in this exact JSON array format it should not be string output as simple array of object:
         [
           { "Question": "..." },
           { "Question": "..." },
@@ -166,7 +168,8 @@ app.post('/ask-question', async (req, res) => {
 
         // Extract just the question
         console.log("question", content)
-        res.json({ questions: content });
+        const cleanJson = JSON.parse(content);
+        res.json({ questions: cleanJson });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'AI interview failed' });
@@ -183,9 +186,9 @@ app.listen(8000, async () => {
     try {
         await connection
         console.log("server is running on 8000")
-        
+
     } catch (error) {
-        
+
     }
-    
+
 })
