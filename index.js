@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors")
 const multer = require('multer');
@@ -162,7 +163,7 @@ app.post('/upload-resume', upload.single('file'), async (req, res) => {
                     'Content-Type': 'application/json',
                 },
             }
-            
+
         );
 
         const content = result.data.choices[0].message.content;
