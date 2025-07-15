@@ -120,6 +120,7 @@ app.post('/upload-resume', upload.single('file'), async (req, res) => {
     // const { resumeText, userAnswer } = req.body;
     const resumeBuffer = req.file.buffer;
     const parsed = await pdfParse(resumeBuffer);
+    
 
     const prompt = `
         You are a mock interviewer for a resume-based AI assessment tool.
